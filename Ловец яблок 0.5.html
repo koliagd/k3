@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ловец яблок</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #6a93cb, #87CEEB);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        canvas {
+            display: block;
+            background: linear-gradient(135deg, #6a93cb, #87CEEB);
+        }
+        #stats-container {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: 10px;
+        }
+        #durability-warning, #error-message, #wave-progress {
+            position: absolute;
+            left: 15px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            display: none;
+        }
+        #durability-warning { top: 60px; background: rgba(255,165,0,0.4); color: #fff; }
+        #error-message { top: 85px; background: rgba(255,0,0,0.4); color: white; }
+        #wave-progress { top: 110px; background: rgba(255,255,255,0.2); color: white; }
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 200;
+            background: rgba(0, 20, 40, 0.92);
+            backdrop-filter: blur(5px);
+        }
+        #logo-screen {
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #logo-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.6s ease-in;
+        }
+        #logo-text {
+            font-size: 90px;
+            font-weight: 800;
+            color: #00f0ff;
+            text-shadow: 0 0 20px #00f0ff, 0 0 40px #00bfff;
+            animation: logoPulse 2.2s infinite alternate;
+        }
+        @keyframes logoPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+
+        button {
+            margin: 12px 0;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .shop-item {
+            width: 90%;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 16px;
+            background: rgba(30, 30, 40, 0.7);
+            color: white;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid #aaa;
+            transition: background 0.3s;
+        }
+        .shop-item.selected {
+            background: rgba(50, 120, 50, 0.6);
+            border-left-color: #66ff66;
+        }
+        .shop-item .check {
+            color: #66ff66;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .shop-nav {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .shop-nav button {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+        .shop-nav span {
+            font-weight: bold;
+            color: #aaffaa;
+        }
+
+        .menu-stats {
+            margin-bottom: 20px;
+            font-size: 20px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="stats-container">
+        Яблоки: <span id="apples">0</span> | Эплы: <span id="apples-currency">0</span>
+    </div>
+    <div id="durability-warning"></div>
+    <div id="error-message"></div>
+    <div id="wave-progress"></div>
+
+    <div id="logo-screen" class="screen"><div id="logo-text">K3</div></div>
+    
+    <div id="start-screen" class="screen" style="display:none;">
+        <div class="menu-stats">🍎 Яблоки: <span id="menu-apples">0</span> | 🪙 Эплы: <span id="menu-currency">0</span></div>
+        <h2 style="font-size: 48px; margin-bottom: 30px; text-shadow: 0 0 15px #00f0ff;">🍎 Ловец яблок</h2>
+        <button id="start-button">▶ Начать игру</button>
+        <button id="shop-button">🛒 Магазин</button>
+        <button id="sell-button">💰 Продать яблоки</button>
+    </div>
+
+    <div id="shop-screen" class="screen" style="display:none;">
+        <h2 style="margin-bottom: 20px;">🛒 Магазин корзин (50 шт)</h2>
+        <div id="shop-items"></div>
+        <div class="shop-nav">
+            <button id="shop-prev">←</button>
+            <span id="shop-page">Стр. 1/10</span>
+            <button id="shop-next">→</button>
+        </div>
+        <button id="shop-back" style="margin-top: 20px;">🔙 Назад в меню</button>
+    </div>
+
+    <div id="sell-screen" class="screen" style="display:none;">
+        <h2>💰 Продать яблоки</h2>
+        <p style="font-size:20px; margin:15px 0;">У вас: <span id="sell-apples">0</span> яблок</p>
+        <p style="font-size:20px; margin:15px 0;">Получите: <span id="sell-amount">0</span> эплов</p>
+        <button id="sell-confirm">Продать всё</button>
+        <button id="sell-back">🔙 Назад в меню</button>
+    </div>
+
+    <div id="pause-screen" class="screen" style="display:none;">
+        <div class="menu-stats">🍎 Яблоки: <span id="pause-apples">0</span> | 🪙 Эплы: <span id="pause-currency">0</span></div>
+        <h2>⏸ Пауза</h2>
+        <button id="resume-button">▶ Продолжить</button>
+        <button id="pause-menu">🔙 В меню</button>
+    </div>
+
+    <div id="game-over" class="screen" style="display:none;">
+        <div class="menu-stats">🍎 Яблоки: <span id="gameover-apples">0</span> | 🪙 Эплы: <span id="gameover-currency">0</span></div>
+        <h2>💀 Игра окончена!</h2>
+        <p style="font-size:22px; margin:15px 0;">Собрано яблок: <span id="final-apples">0</span></p>
+        <button id="restart-button">🔄 Рестарт</button>
+        <button id="gameover-menu">🔙 В меню</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const applesEl = document.getElementById('apples');
+        const currencyEl = document.getElementById('apples-currency');
+        const menuApples = document.getElementById('menu-apples');
+        const menuCurrency = document.getElementById('menu-currency');
+        const pauseApples = document.getElementById('pause-apples');
+        const pauseCurrency = document.getElementById('pause-currency');
+        const gameoverApples = document.getElementById('gameover-apples');
+        const gameoverCurrency = document.getElementById('gameover-currency');
+        const sellApplesEl = document.getElementById('sell-apples');
+        const sellAmountEl = document.getElementById('sell-amount');
+        const finalApplesEl = document.getElementById('final-apples');
+        const durWarn = document.getElementById('durability-warning');
+        const errEl = document.getElementById('error-message');
+        const waveProgressEl = document.getElementById('wave-progress');
+
+        const logoScreen = document.getElementById('logo-screen');
+        const startScreen = document.getElementById('start-screen');
+        const shopScreen = document.getElementById('shop-screen');
+        const sellScreen = document.getElementById('sell-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const gameOverScreen = document.getElementById('game-over');
+
+        let apples = 0;
+        let applesCurrency = 0;
+        let basketId = 0;
+        let basketDurability = 10;
+        let gameRunning = false;
+        let gamePaused = false;
+        let lives = 3;
+        let gameSpeed = 1;
+        let basketHeight = 30; // для анимации
+        let isBasketAnimating = false;
+        let basketAnimationEnd = 0;
+        const basket = { x: 0, y: 0, width: 100, height: basketHeight };
+        const applesList = [];
+        let spawnRate = 60;
+        let spawnCounter = 0;
+        let mouseX = 0;
+        let lastFrame = 0;
+        let wave = 0;
+        let applesInWave = 0;
+        let neededForWave = 10;
+
+        // === Texture for broken basket (hole) ===
+        let brokenBasketMask = null;
+        function createBrokenBasketMask() {
+            const size = 100;
+            const offscreen = document.createElement('canvas');
+            offscreen.width = size;
+            offscreen.height = 40;
+            const oCtx = offscreen.getContext('2d');
+            oCtx.clearRect(0, 0, size, 40);
+            oCtx.fillStyle = '#000';
+            oCtx.fillRect(0, 0, size, 40);
+            // Дырка по центру
+            oCtx.globalCompositeOperation = 'destination-out';
+            oCtx.beginPath();
+            oCtx.arc(size / 2, 20, 15, 0, Math.PI * 2);
+            oCtx.fill();
+            brokenBasketMask = offscreen;
+        }
+
+        // === Save/Load ===
+        function save() {
+            localStorage.setItem('apple_game_final', JSON.stringify({
+                apples, applesCurrency, basketId, basketDurability
+            }));
+        }
+        function load() {
+            const s = localStorage.getItem('apple_game_final');
+            if (s) {
+                const d = JSON.parse(s);
+                apples = d.apples || 0;
+                applesCurrency = d.applesCurrency || 0;
+                basketId = Math.min(49, Math.max(0, d.basketId || 0));
+                basketDurability = d.basketDurability || 10;
+            }
+            updateUI();
+        }
+        function updateUI() {
+            applesEl.textContent = apples;
+            currencyEl.textContent = applesCurrency;
+            menuApples.textContent = apples;
+            menuCurrency.textContent = applesCurrency;
+            pauseApples.textContent = apples;
+            pauseCurrency.textContent = applesCurrency;
+            gameoverApples.textContent = apples;
+            gameoverCurrency.textContent = applesCurrency;
+            sellApplesEl.textContent = apples;
+            sellAmountEl.textContent = apples * 50;
+
+            let durColor = '#00ff00';
+            if (basketDurability <= 3) durColor = '#ff9900';
+            if (basketDurability <= 1) durColor = '#ff3300';
+
+            if (basketDurability <= 3 && basketDurability > 0) {
+                durWarn.style.display = 'block';
+                durWarn.textContent = `⚠️ Прочность корзины: ${basketDurability}`;
+                durWarn.style.color = durColor;
+            } else durWarn.style.display = 'none';
+
+            if (basketDurability <= 0) {
+                errEl.style.display = 'block';
+                errEl.textContent = '❌ Корзина сломана! Купите новую.';
+            } else {
+                errEl.style.display = 'none';
+            }
+            save();
+        }
+
+        // === Shop ===
+        let shopPage = 0;
+        const shopItemsEl = document.getElementById('shop-items');
+        const shopPageEl = document.getElementById('shop-page');
+        function openShop() {
+            startScreen.style.display = 'none';
+            shopScreen.style.display = 'flex';
+            shopPage = 0;
+            renderShop();
+        }
+        function renderShop() {
+            shopItemsEl.innerHTML = '';
+            shopPageEl.textContent = `Стр. ${shopPage + 1}/10`;
+            const start = shopPage * 5;
+            for (let i = start; i < start + 5 && i < 50; i++) {
+                const durability = i + 1;
+                const price = 500 + i * 2000;
+                const div = document.createElement('div');
+                div.className = 'shop-item';
+                if (i === basketId) div.classList.add('selected');
+                const check = i === basketId ? '✅' : '';
+                div.innerHTML = `
+                    <span>Корзина #${i + 1} | Прочность: ${durability}</span>
+                    <span>${price} 🪙</span>
+                    <span class="check">${check}</span>
+                `;
+                div.onclick = () => {
+                    if (applesCurrency >= price) {
+                        applesCurrency -= price;
+                        basketId = i;
+                        basketDurability = i + 1;
+                        updateUI();
+                        renderShop();
+                        alert(`✅ Куплена и выбрана корзина #${i + 1}!`);
+                    } else {
+                        alert('❌ Недостаточно эплов!');
+                    }
+                };
+                shopItemsEl.appendChild(div);
+            }
+        }
+        document.getElementById('shop-prev').onclick = () => { if (shopPage > 0) { shopPage--; renderShop(); } };
+        document.getElementById('shop-next').onclick = () => { if (shopPage < 9) { shopPage++; renderShop(); } };
+        document.getElementById('shop-back').onclick = () => { shopScreen.style.display = 'none'; startScreen.style.display = 'flex'; };
+
+        // === Sell ===
+        function openSell() {
+            startScreen.style.display = 'none';
+            sellScreen.style.display = 'flex';
+            updateUI();
+        }
+        document.getElementById('sell-confirm').onclick = () => {
+            if (apples > 0) {
+                applesCurrency += apples * 50;
+                apples = 0;
+                updateUI();
+                alert('✅ Все яблоки проданы!');
+            }
+        };
+        document.getElementById('sell-back').onclick = () => {
+            sellScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        };
+
+        // === Game ===
+        function startGame() {
+            if (basketDurability <= 0) {
+                alert('❗ Нет корзины! Купите новую в магазине.');
+                return;
+            }
+            applesList.length = 0;
+            spawnRate = 60;
+            spawnCounter = 0;
+            gameSpeed = 1;
+            lives = 3;
+            wave = 0;
+            applesInWave = 0;
+            neededForWave = 10;
+            basket.x = canvas.width / 2 - 50;
+            basket.y = canvas.height - 50;
+            gameRunning = true;
+            gamePaused = false;
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
+            waveProgressEl.style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            finalApplesEl.textContent = apples;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function togglePause() {
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                pauseScreen.style.display = 'flex';
+                updateUI();
+            } else {
+                pauseScreen.style.display = 'none';
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function exitToMenu() {
+            gameRunning = false;
+            gamePaused = false;
+            startScreen.style.display = 'flex';
+            shopScreen.style.display = 'none';
+            sellScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            updateUI();
+        }
+
+        // === Game Logic ===
+        function createApple() {
+            if (applesList.length >= 15) return;
+            const x = Math.random() * (canvas.width - 30) + 15;
+            let speed = Math.random() * 3 + 2;
+            let color = '#FF4545';
+            let type = 'normal';
+            if (wave !== 0) {
+                if (Math.random() < 0.5) type = 'normal';
+                else {
+                    if (wave === 1) { type = 'bomb'; color = '#333'; }
+                    else if (wave === 2) { type = 'mimic_bomb'; color = '#FF4545'; }
+                    else if (wave === 3) { type = 'poison'; color = '#8B00FF'; }
+                    else if (wave === 4) { type = 'exploding'; color = '#FF6B35'; }
+                }
+            }
+            applesList.push({ x, y: -30, radius: 15, speed, color, type });
+        }
+
+        function updateBasket() {
+            basket.x = mouseX - basket.width / 2;
+            if (basket.x < 0) basket.x = 0;
+            if (basket.x > canvas.width - basket.width) basket.x = canvas.width - basket.width;
+        }
+
+        function updateApples() {
+            spawnCounter += gameSpeed;
+            if (spawnCounter >= spawnRate) {
+                createApple();
+                spawnCounter = 0;
+                if (spawnRate > 20) spawnRate -= 0.5;
+            }
+            for (let i = applesList.length - 1; i >= 0; i--) {
+                const a = applesList[i];
+                a.y += a.speed * gameSpeed;
+
+                // Проверка попадания ТОЛЬКО если корзина целая
+                if (basketDurability > 0) {
+                    if (a.y + a.radius > basket.y && a.x > basket.x && a.x < basket.x + basket.width) {
+                        // Анимация попадания
+                        isBasketAnimating = true;
+                        basketAnimationEnd = Date.now() + 100;
+
+                        if (a.type === 'bomb' || a.type === 'mimic_bomb' || a.type === 'exploding') {
+                            apples -= 5;
+                            lives--;
+                        } else if (a.type === 'poison') {
+                            apples -= 3;
+                            lives -= 2;
+                        } else {
+                            apples++;
+                            applesInWave++;
+                            if (apples % 10 === 0) basketDurability--;
+                        }
+                        applesList.splice(i, 1);
+                        updateUI();
+                        if (lives <= 0 || apples < 0) endGame();
+
+                        if (applesInWave >= neededForWave) {
+                            wave = (wave + 1) % 5;
+                            applesInWave = 0;
+                            neededForWave += 5;
+                            gameSpeed += 0.1;
+                        }
+                        waveProgressEl.textContent = `Прогресс волны: ${applesInWave}/${neededForWave} яблок`;
+                        waveProgressEl.style.display = 'block';
+                        continue;
+                    }
+                }
+
+                // Если корзина сломана — яблоко падает сквозь неё
+                if (a.y - a.radius > canvas.height) {
+                    applesList.splice(i, 1);
+                }
+            }
+        }
+
+        function getBasketColor(id) {
+            const lightness = 30 + id * 0.8;
+            return `hsl(30, 70%, ${lightness}%)`;
+        }
+
+        function drawBasket() {
+            const currentY = basket.y;
+            let currentHeight = basketHeight;
+
+            // Анимация сжатия
+            if (isBasketAnimating && Date.now() < basketAnimationEnd) {
+                currentHeight = basketHeight * 0.6;
+            } else if (isBasketAnimating) {
+                isBasketAnimating = false;
+                currentHeight = basketHeight;
+            }
+
+            if (basketDurability <= 0) {
+                // Рисуем дырявую корзину
+                ctx.fillStyle = getBasketColor(basketId);
+                ctx.fillRect(basket.x, currentY, basket.width, currentHeight);
+                // Дырка
+                if (brokenBasketMask) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.drawImage(brokenBasketMask, basket.x, currentY - 10);
+                    ctx.restore();
+                }
+                // Рамка
+                ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(basket.x, currentY, basket.width, currentHeight);
+            } else {
+                // Обычная корзина
+                ctx.fillStyle = getBasketColor(basketId);
+                ctx.fillRect(basket.x, currentY, basket.width, currentHeight);
+                ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(basket.x, currentY, basket.width, currentHeight);
+            }
+
+            // Ручка
+            ctx.beginPath();
+            ctx.moveTo(basket.x + 20, currentY);
+            ctx.quadraticCurveTo(basket.x + basket.width/2, currentY - 20, basket.x + basket.width - 20, currentY);
+            ctx.strokeStyle = 'rgba(100,70,40,0.8)';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+        }
+
+        function drawApples() {
+            for (const a of applesList) {
+                ctx.beginPath();
+                ctx.arc(a.x, a.y, a.radius, 0, Math.PI*2);
+                ctx.fillStyle = a.color;
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(a.x - 5, a.y - a.radius);
+                ctx.quadraticCurveTo(a.x - 10, a.y - a.radius - 10, a.x - 3, a.y - a.radius - 8);
+                ctx.fillStyle = '#22cc22';
+                ctx.fill();
+                if (a.type === 'mimic_bomb') {
+                    ctx.beginPath();
+                    ctx.arc(a.x, a.y - a.radius/2, 3, 0, Math.PI*2);
+                    ctx.fillStyle = '#000';
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawLives() {
+            ctx.fillStyle = '#000';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Жизни: ${lives}`, 20, canvas.height - 20);
+        }
+
+        let animId;
+        function gameLoop(ts) {
+            if (!gameRunning || gamePaused) return;
+            const dt = ts - lastFrame;
+            lastFrame = ts;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateBasket();
+            updateApples();
+            drawBasket();
+            drawApples();
+            drawLives();
+            animId = requestAnimationFrame(gameLoop);
+        }
+
+        // === Input ===
+        canvas.addEventListener('mousemove', e => mouseX = e.clientX);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && gameRunning) togglePause();
+        });
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            basket.y = canvas.height - 50;
+            createBrokenBasketMask();
+        });
+
+        // === Buttons ===
+        document.getElementById('start-button').onclick = startGame;
+        document.getElementById('shop-button').onclick = openShop;
+        document.getElementById('sell-button').onclick = openSell;
+        document.getElementById('resume-button').onclick = () => { gamePaused = false; pauseScreen.style.display = 'none'; requestAnimationFrame(gameLoop); };
+        document.getElementById('pause-menu').onclick = exitToMenu;
+        document.getElementById('restart-button').onclick = startGame;
+        document.getElementById('gameover-menu').onclick = exitToMenu;
+
+        // === Init ===
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            basket.y = canvas.height - 50;
+            createBrokenBasketMask();
+            load();
+            logoScreen.classList.add('show');
+            setTimeout(() => {
+                logoScreen.classList.remove('show');
+                setTimeout(() => startScreen.style.display = 'flex', 500);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

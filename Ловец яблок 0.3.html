@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ловец яблок</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            background-color: #87CEEB;
+        }
+        #score-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #game-over, #start-screen, #logo-screen, #pause-screen, #settings-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 200;
+        }
+        #logo-screen {
+            background-color: #000;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #logo-screen.show {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.5s ease-in;
+        }
+        #logo-text {
+            font-size: 80px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 20px #00faff, 0 0 30px #00faff;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        #start-screen, #pause-screen, #settings-menu, #game-over {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .fps-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: white;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        #wave-indicator {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        #wave-progress {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+        .orientation-option {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .orientation-option input {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="score-container">Счет: <span id="score">0</span></div>
+    <div id="fps-display" class="fps-display">FPS: 0</div>
+    <div id="wave-indicator"></div>
+    <div id="wave-progress"></div>
+
+    <!-- Logo Screen -->
+    <div id="logo-screen">
+        <div id="logo-text">K3</div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" style="display: none;">
+        <h1>Ловец яблок</h1>
+        <p>Используйте стрелки или мышь, чтобы двигать корзину</p>
+        <button id="start-button">Начать игру</button>
+        <button id="open-settings-from-start">Настройки</button>
+    </div>
+
+    <!-- Settings Menu -->
+    <div id="settings-menu" style="display: none;">
+        <h2>Настройки</h2>
+        <div class="orientation-option">
+            <input type="radio" id="orientation-pc" name="orientation" checked>
+            <label for="orientation-pc">ПК (авто)</label>
+        </div>
+        <div class="orientation-option">
+            <input type="radio" id="orientation-phone" name="orientation">
+            <label for="orientation-phone">Телефон (9:16)</label>
+        </div>
+        <button id="apply-settings">Применить</button>
+        <button id="back-to-start">Назад</button>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pause-screen" style="display: none;">
+        <h2>Пауза</h2>
+        <button id="resume-button">Возобновить</button>
+        <button id="open-settings-from-pause">Настройки</button>
+        <button id="exit-to-menu">Выйти в меню</button>
+    </div>
+
+    <!-- Game Over -->
+    <div id="game-over" style="display: none;">
+        Игра окончена!<br>
+        Ваш счет: <span id="final-score">0</span><br>
+        <button id="restart-button">Играть снова</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('final-score');
+        const gameOverScreen = document.getElementById('game-over');
+        const startScreen = document.getElementById('start-screen');
+        const logoScreen = document.getElementById('logo-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const settingsMenu = document.getElementById('settings-menu');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const resumeButton = document.getElementById('resume-button');
+        const exitToMenuBtn = document.getElementById('exit-to-menu');
+        const openSettingsFromStart = document.getElementById('open-settings-from-start');
+        const openSettingsFromPause = document.getElementById('open-settings-from-pause');
+        const backToStartBtn = document.getElementById('back-to-start');
+        const applySettingsBtn = document.getElementById('apply-settings');
+        const fpsDisplay = document.getElementById('fps-display');
+        const waveIndicator = document.getElementById('wave-indicator');
+        const waveProgress = document.getElementById('wave-progress');
+
+        let currentOrientation = 'pc';
+        function applyOrientation() {
+            if (currentOrientation === 'phone') {
+                canvas.width = 450;
+                canvas.height = 800;
+            } else {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            basket.y = canvas.height - 50;
+            basket.x = Math.min(basket.x, canvas.width - basket.width);
+        }
+
+        let score = 0;
+        let gameRunning = false;
+        let gamePaused = false;
+        let lives = 3;
+        let gameSpeedMultiplier = 1;
+        let gameSpeedIncrease = 0.001;
+        const basket = {
+            x: canvas.width / 2 - 50,
+            y: canvas.height - 50,
+            width: 100,
+            height: 30,
+            speed: 10,
+            color: '#8B4513'
+        };
+        const apples = [];
+        let appleSpawnRate = 60;
+        let appleSpawnCounter = 0;
+        let rightPressed = false;
+        let leftPressed = false;
+        let mouseX = canvas.width / 2;
+        let lastFrameTime = 0;
+        let fps = 0;
+        let frameCount = 0;
+        let waveCounter = 0;
+        let waveType = 0;
+        let applesCollectedInWave = 0;
+        let applesNeededForNextWave = 10;
+
+        function keyDownHandler(e) {
+            if (e.key === 'ArrowRight' || e.key === 'Right') {
+                rightPressed = true;
+            } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                leftPressed = true;
+            } else if (e.key === 'Escape' && gameRunning) {
+                togglePause();
+            }
+        }
+
+        function keyUpHandler(e) {
+            if (e.key === 'ArrowRight' || e.key === 'Right') {
+                rightPressed = false;
+            } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                leftPressed = false;
+            }
+        }
+
+        function mouseMoveHandler(e) {
+            mouseX = e.clientX;
+        }
+
+        function startGame() {
+            score = 0;
+            lives = 3;
+            apples.length = 0;
+            appleSpawnRate = 60;
+            appleSpawnCounter = 0;
+            basket.x = canvas.width / 2 - 50;
+            gameSpeedMultiplier = 1;
+            gameSpeedIncrease = 0.001;
+            scoreElement.textContent = score;
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
+            gameRunning = true;
+            gamePaused = false;
+            waveCounter = 0;
+            waveType = 0;
+            applesCollectedInWave = 0;
+            applesNeededForNextWave = 10;
+            waveIndicator.style.display = 'none';
+            waveProgress.style.display = 'none';
+            applyOrientation();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        function checkGameOver() {
+            if (lives <= 0 || score <= 0) {
+                endGame();
+            }
+        }
+
+        function createApple() {
+            if (apples.length >= 10) return; // simple limit
+            const x = Math.random() * (canvas.width - 30) + 15;
+            let speed = Math.random() * 3 + 2;
+            let color = '#FF0000';
+            let type = 'normal';
+            if (waveType !== 0) {
+                if (Math.random() < 0.5) {
+                    type = 'normal';
+                    color = '#FF0000';
+                } else {
+                    if (waveType === 1) {
+                        type = 'bomb';
+                        color = '#333333';
+                    } else if (waveType === 2) {
+                        type = 'mimic_bomb';
+                        color = '#FF0000';
+                    } else if (waveType === 3) {
+                        type = 'poison';
+                        color = '#8B00FF';
+                    } else if (waveType === 4) {
+                        type = 'exploding';
+                        color = '#FF4500';
+                    }
+                }
+            }
+            apples.push({
+                x: x,
+                y: -30,
+                radius: 15,
+                speed: speed,
+                color: color,
+                type: type,
+                id: Date.now() + Math.random(),
+                creationTime: Date.now()
+            });
+        }
+
+        function updateBasket() {
+            basket.x = mouseX - basket.width / 2;
+            if (basket.x < 0) basket.x = 0;
+            else if (basket.x > canvas.width - basket.width) basket.x = canvas.width - basket.width;
+        }
+
+        function updateApples() {
+            appleSpawnCounter += gameSpeedMultiplier;
+            if (appleSpawnCounter >= appleSpawnRate) {
+                createApple();
+                appleSpawnCounter = 0;
+                if (appleSpawnRate > 20) appleSpawnRate -= 0.5;
+            }
+            for (let i = apples.length - 1; i >= 0; i--) {
+                const apple = apples[i];
+                apple.y += apple.speed * gameSpeedMultiplier;
+                const collision = (apple.y + apple.radius > basket.y) &&
+                                  (apple.x > basket.x && apple.x < basket.x + basket.width);
+                if (collision) {
+                    if (apple.type === 'bomb' || apple.type === 'mimic_bomb' || apple.type === 'exploding') {
+                        score -= 5;
+                        lives--;
+                    } else if (apple.type === 'poison') {
+                        score -= 3;
+                        lives -= 2;
+                    } else if (apple.type === 'golden') {
+                        score += 2;
+                        lives++;
+                        applesCollectedInWave++;
+                    } else {
+                        score += 1;
+                        applesCollectedInWave++;
+                        gameSpeedMultiplier += gameSpeedIncrease;
+                    }
+                    apples.splice(i, 1);
+                    scoreElement.textContent = score;
+                    checkGameOver();
+                    waveProgress.textContent = `Прогресс волны: ${applesCollectedInWave}/${applesNeededForNextWave}`;
+                    waveProgress.style.display = 'block';
+                    if (applesCollectedInWave >= applesNeededForNextWave) {
+                        waveCounter++;
+                        waveType = waveCounter % 5;
+                        applesCollectedInWave = 0;
+                        applesNeededForNextWave += 5;
+                        gameSpeedMultiplier += 0.1;
+                        if (waveType === 0) {
+                            waveIndicator.textContent = 'Обычные яблоки';
+                            waveIndicator.style.color = '#FFFFFF';
+                        } else if (waveType === 1) {
+                            waveIndicator.textContent = 'Волна бомб!';
+                            waveIndicator.style.color = '#FF0000';
+                        } else if (waveType === 2) {
+                            waveIndicator.textContent = 'Волна яблок-мимиков!';
+                            waveIndicator.style.color = '#FF8C00';
+                        } else if (waveType === 3) {
+                            waveIndicator.textContent = 'Волна ядовитых яблок!';
+                            waveIndicator.style.color = '#8B00FF';
+                        } else if (waveType === 4) {
+                            waveIndicator.textContent = 'Волна взрывных яблок!';
+                            waveIndicator.style.color = '#FF4500';
+                        }
+                        waveIndicator.style.display = 'block';
+                        setTimeout(() => { waveIndicator.style.display = 'none'; }, 3000);
+                    }
+                    continue;
+                }
+                if (apple.y - apple.radius > canvas.height) {
+                    apples.splice(i, 1);
+                }
+            }
+        }
+
+        function drawBasket() {
+            ctx.fillStyle = basket.color;
+            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+            ctx.beginPath();
+            ctx.moveTo(basket.x + 20, basket.y);
+            ctx.quadraticCurveTo(basket.x + basket.width / 2, basket.y - 20, basket.x + basket.width - 20, basket.y);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = basket.color;
+            ctx.stroke();
+        }
+
+        function drawApples() {
+            for (const apple of apples) {
+                ctx.beginPath();
+                ctx.arc(apple.x, apple.y, apple.radius, 0, Math.PI * 2);
+                ctx.fillStyle = apple.color;
+                ctx.fill();
+
+                // Leaf
+                ctx.beginPath();
+                ctx.moveTo(apple.x - 5, apple.y - apple.radius);
+                ctx.quadraticCurveTo(apple.x - 10, apple.y - apple.radius - 10, apple.x - 3, apple.y - apple.radius - 8);
+                ctx.fillStyle = '#32CD32';
+                ctx.fill();
+
+                // 👁️ Eye for mimic
+                if (apple.type === 'mimic_bomb') {
+                    ctx.beginPath();
+                    ctx.arc(apple.x, apple.y - apple.radius / 2, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#000';
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawLives() {
+            ctx.fillStyle = '#000';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Жизни: ${lives}`, 20, canvas.height - 20);
+        }
+
+        let animationFrameId;
+        function gameLoop(currentTime) {
+            if (!gameRunning || gamePaused) return;
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
+            frameCount++;
+            if (deltaTime > 1000) {
+                fps = Math.round(frameCount / (deltaTime / 1000));
+                fpsDisplay.textContent = `FPS: ${fps}`;
+                frameCount = 0;
+                lastFrameTime = currentTime;
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateBasket();
+            updateApples();
+            drawBasket();
+            drawApples();
+            drawLives();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function togglePause() {
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                pauseScreen.style.display = 'flex';
+            } else {
+                pauseScreen.style.display = 'none';
+                if (gameRunning) requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Listeners
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        resumeButton.addEventListener('click', () => {
+            gamePaused = false;
+            pauseScreen.style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        });
+        exitToMenuBtn.addEventListener('click', () => {
+            gameRunning = false;
+            gamePaused = false;
+            pauseScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        });
+        openSettingsFromStart.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            settingsMenu.style.display = 'flex';
+        });
+        openSettingsFromPause.addEventListener('click', () => {
+            pauseScreen.style.display = 'none';
+            settingsMenu.style.display = 'flex';
+        });
+        backToStartBtn.addEventListener('click', () => {
+            settingsMenu.style.display = 'none';
+            startScreen.style.display = 'flex';
+        });
+        applySettingsBtn.addEventListener('click', () => {
+            currentOrientation = document.getElementById('orientation-phone').checked ? 'phone' : 'pc';
+            applyOrientation();
+            settingsMenu.style.display = 'none';
+            startScreen.style.display = 'flex';
+        });
+
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+        canvas.addEventListener('mousemove', mouseMoveHandler);
+
+        window.addEventListener('resize', () => {
+            if (currentOrientation === 'pc') applyOrientation();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            logoScreen.classList.add('show');
+            setTimeout(() => {
+                logoScreen.classList.remove('show');
+                setTimeout(() => {
+                    startScreen.style.display = 'flex';
+                }, 500);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
