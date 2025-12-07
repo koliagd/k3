@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         header {
             text-align: center;
             margin-bottom: 40px;
-            padding: 20px;
+            padding: 25px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -55,206 +55,159 @@
         
         .description {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
             line-height: 1.6;
             color: #b8b8b8;
         }
         
-        .content {
-            display: flex;
-            flex-direction: column;
+        .games-container {
+            display: grid;
             gap: 30px;
         }
         
-        @media (min-width: 992px) {
-            .content {
-                flex-direction: row;
-            }
-            
-            .games-list {
-                flex: 1;
-            }
-            
-            .game-viewer {
-                flex: 2;
-            }
-        }
-        
-        .games-list {
+        .game-card {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
-            padding: 25px;
+            padding: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .games-list h2 {
-            font-size: 1.8rem;
-            margin-bottom: 25px;
-            color: #4cc9f0;
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid rgba(76, 201, 240, 0.3);
         }
         
-        .game-item {
-            background: rgba(30, 30, 50, 0.7);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
-        
-        .game-item:hover {
-            background: rgba(40, 40, 70, 0.8);
-            border-color: rgba(76, 201, 240, 0.3);
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .game-item.active {
-            background: rgba(40, 40, 70, 0.9);
-            border-color: #4cc9f0;
-            box-shadow: 0 0 20px rgba(76, 201, 240, 0.2);
-        }
-        
         .game-title {
-            font-size: 1.6rem;
-            margin-bottom: 10px;
+            font-size: 2rem;
             color: #f0f0f0;
         }
         
         .game-author {
+            font-size: 1.1rem;
             color: #a9a9a9;
-            margin-bottom: 15px;
             font-style: italic;
         }
         
-        .version-selector {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+        .game-description {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #b8b8b8;
         }
         
-        .version-btn {
-            padding: 10px 20px;
-            background: rgba(76, 201, 240, 0.2);
-            border: 1px solid rgba(76, 201, 240, 0.5);
+        .versions-container {
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .versions-title {
+            font-size: 1.2rem;
             color: #4cc9f0;
-            border-radius: 8px;
-            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        
+        .versions-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .versions-list {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .version-item {
+            background: rgba(40, 40, 70, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
-            font-weight: bold;
         }
         
-        .version-btn:hover {
-            background: rgba(76, 201, 240, 0.4);
-            transform: translateY(-3px);
+        .version-item:hover {
+            background: rgba(50, 50, 90, 0.8);
+            border-color: rgba(76, 201, 240, 0.3);
         }
         
-        .version-btn.active {
-            background: rgba(76, 201, 240, 0.7);
-            color: white;
-            box-shadow: 0 0 15px rgba(76, 201, 240, 0.5);
-        }
-        
-        .game-viewer {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .viewer-header {
+        .version-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
         }
         
-        .selected-game-info h3 {
-            font-size: 1.8rem;
-            color: #4cc9f0;
+        .version-name {
+            font-size: 1.3rem;
+            color: #f0f0f0;
         }
         
-        .selected-version {
-            font-size: 1.2rem;
+        .version-tag {
+            background: rgba(247, 37, 133, 0.2);
             color: #f72585;
-            background: rgba(247, 37, 133, 0.1);
-            padding: 5px 15px;
+            padding: 4px 12px;
             border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
             border: 1px solid rgba(247, 37, 133, 0.3);
         }
         
-        .game-frame-container {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .game-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .placeholder {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            color: #888;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .placeholder-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            color: #4cc9f0;
-            opacity: 0.5;
-        }
-        
-        .placeholder h3 {
-            font-size: 1.8rem;
+        .version-desc {
+            color: #a9a9a9;
             margin-bottom: 15px;
-            color: #aaa;
+            font-size: 0.95rem;
         }
         
-        .placeholder p {
-            max-width: 400px;
-            line-height: 1.6;
-        }
-        
-        footer {
+        .launch-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, #4cc9f0 0%, #4361ee 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
             text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #777;
-            font-size: 0.9rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+        }
+        
+        .launch-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(76, 201, 240, 0.3);
+            background: linear-gradient(90deg, #3db8e0 0%, #3a56d4 100%);
+        }
+        
+        .launch-btn:active {
+            transform: translateY(0);
         }
         
         .instructions {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
             padding: 20px;
-            margin-top: 20px;
+            margin-top: 25px;
             border-left: 4px solid #4cc9f0;
         }
         
-        .instructions h4 {
+        .instructions h3 {
             color: #4cc9f0;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
         }
         
         .instructions ul {
@@ -264,125 +217,150 @@
         
         .instructions li {
             margin-bottom: 8px;
+            color: #b8b8b8;
+        }
+        
+        .coming-soon {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+        }
+        
+        .coming-soon h3 {
+            color: #4cc9f0;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .alert-box {
+            background: rgba(247, 37, 133, 0.1);
+            border: 1px solid rgba(247, 37, 133, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #f72585;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Коллекция игр</h1>
-            <div class="author">Автор: <span>k3</span></div>
-            <p class="description">Добро пожаловать в коллекцию игр от разработчика k3. Здесь вы найдете различные версии игр, которые можно запустить прямо в браузере. На данный момент доступна игра "Ловец яблок" в двух версиях.</p>
+            <h1>Коллекция игр от k3</h1>
+            <div class="author">Разработчик: <span>k3</span></div>
+            <p class="description">На этой странице вы можете выбрать и запустить игры, созданные разработчиком k3. Каждая игра открывается в новой вкладке браузера.</p>
         </header>
         
-        <div class="content">
-            <div class="games-list">
-                <h2>Список игр</h2>
-                
-                <div class="game-item active" id="apple-catcher">
-                    <div class="game-title">Ловец яблок</div>
-                    <div class="game-author">Автор: k3</div>
-                    <p>Игра, в которой нужно ловить падающие яблоки. Постарайтесь набрать как можно больше очков, избегая пропусков.</p>
-                    
-                    <div class="instructions">
-                        <h4>Как играть:</h4>
-                        <ul>
-                            <li>Используйте мышь или стрелки на клавиатуре для перемещения корзины</li>
-                            <li>Ловите падающие яблоки</li>
-                            <li>Каждое пойманное яблоко приносит очки</li>
-                            <li>Старайтесь не пропускать яблоки</li>
-                        </ul>
+        <div class="alert-box">
+            ⚠️ Внимание: Игра "Ловец яблок" не создается на этой странице, а запускается из отдельного файла!
+        </div>
+        
+        <div class="games-container">
+            <div class="game-card">
+                <div class="game-header">
+                    <div>
+                        <div class="game-title">Ловец яблок</div>
+                        <div class="game-author">Автор: k3</div>
                     </div>
-                    
-                    <div class="version-selector">
-                        <button class="version-btn active" data-version="0.5" data-game="apple-catcher">Версия 0.5</button>
-                        <button class="version-btn" data-version="0.3" data-game="apple-catcher">Версия 0.3</button>
+                    <div class="version-tag">Есть 2 версии</div>
+                </div>
+                
+                <div class="game-description">
+                    Классическая аркадная игра, в которой вы управляете корзиной и ловите падающие яблоки. 
+                    Цель игры - набрать как можно больше очков, не пропуская яблоки. С каждой версией игра 
+                    становится интереснее - добавляются новые механики и улучшается графика.
+                </div>
+                
+                <div class="versions-container">
+                    <div class="versions-title">Доступные версии:</div>
+                    <div class="versions-list">
+                        <div class="version-item">
+                            <div class="version-header">
+                                <div class="version-name">Ловец яблок 0.5</div>
+                                <div class="version-tag">Новая</div>
+                            </div>
+                            <div class="version-desc">Улучшенная графика, больше анимаций, система рекордов и бонусы.</div>
+                            <a href="Ловец яблок 0.5.html" target="_blank" class="launch-btn">🚀 Запустить версию 0.5</a>
+                        </div>
+                        
+                        <div class="version-item">
+                            <div class="version-header">
+                                <div class="version-name">Ловец яблок 0.3</div>
+                                <div class="version-tag">Классика</div>
+                            </div>
+                            <div class="version-desc">Базовая версия с простой графикой и геймплеем. Идеальна для знакомства с игрой.</div>
+                            <a href="Ловец яблок 0.3.html" target="_blank" class="launch-btn">🚀 Запустить версию 0.3</a>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="instructions" style="margin-top: 30px;">
-                    <h4>Информация:</h4>
-                    <p>На данный момент это единственная игра в коллекции. В будущем здесь появятся другие игры от разработчика k3.</p>
-                </div>
-            </div>
-            
-            <div class="game-viewer">
-                <div class="viewer-header">
-                    <div class="selected-game-info">
-                        <h3 id="selected-game-title">Ловец яблок</h3>
-                        <div class="selected-version" id="selected-version">Версия 0.5</div>
-                    </div>
-                    <div class="launch-info">
-                        <div>Игра загружена и готова к запуску</div>
-                    </div>
-                </div>
-                
-                <div class="game-frame-container">
-                    <iframe class="game-frame" id="game-frame" src="Ловец%20яблок%200.5.html" title="Ловец яблок версия 0.5"></iframe>
+                <div class="instructions">
+                    <h3>Как играть:</h3>
+                    <ul>
+                        <li><strong>Управление:</strong> Используйте стрелки ← → на клавиатуре или мышь для перемещения корзины</li>
+                        <li><strong>Цель:</strong> Ловите падающие яблоки, чтобы зарабатывать очки</li>
+                        <li><strong>Сложность:</strong> Со временем яблоки падают быстрее</li>
+                        <li><strong>Версия 0.5:</strong> Добавлены бонусные предметы и система рекордов</li>
+                        <li><strong>Версия 0.3:</strong> Простой классический геймплей</li>
+                    </ul>
                 </div>
             </div>
         </div>
         
+        <div class="coming-soon">
+            <h3>Скоро новые игры!</h3>
+            <p>Разработчик k3 готовит к выпуску новые увлекательные игры. Следите за обновлениями!</p>
+        </div>
+        
         <footer>
-            <p>Коллекция игр от разработчика k3 | Все игры предназначены для использования в браузере</p>
-            <p style="margin-top: 10px; font-size: 0.8rem; color: #555;">Примечание: Игра "Ловец яблок" не создается на этой странице, а загружается из соответствующих HTML-файлов</p>
+            <p>© 2023 Коллекция игр от разработчика k3 | Все игры открываются в отдельных вкладках</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #555;">Примечание: Для корректной работы убедитесь, что файлы "Ловец яблок 0.5.html" и "Ловец яблок 0.3.html" находятся в той же папке</p>
         </footer>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const versionButtons = document.querySelectorAll('.version-btn');
-            const gameFrame = document.getElementById('game-frame');
-            const selectedVersionElement = document.getElementById('selected-version');
-            
-            // Обработчик клика на кнопки версий
-            versionButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const game = this.getAttribute('data-game');
-                    const version = this.getAttribute('data-version');
-                    
-                    // Обновляем активную кнопку
-                    versionButtons.forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    this.classList.add('active');
-                    
-                    // Обновляем отображаемую версию
-                    selectedVersionElement.textContent = `Версия ${version}`;
-                    
-                    // Загружаем соответствующую версию игры
-                    if (game === 'apple-catcher') {
-                        if (version === '0.5') {
-                            gameFrame.src = 'Ловец%20яблок%200.5.html';
-                        } else if (version === '0.3') {
-                            gameFrame.src = 'Ловец%20яблок%200.3.html';
-                        }
-                    }
-                    
-                    // Показываем информацию о загрузке
-                    const gameFrameContainer = document.querySelector('.game-frame-container');
-                    gameFrameContainer.innerHTML = `
-                        <div class="placeholder">
-                            <div class="placeholder-icon">⌛</div>
-                            <h3>Загрузка игры...</h3>
-                            <p>Игра "Ловец яблок", версия ${version} загружается. Пожалуйста, подождите.</p>
-                        </div>
-                    `;
-                    
-                    // Через короткую задержку загружаем iframe с игрой
-                    setTimeout(() => {
-                        gameFrameContainer.innerHTML = `<iframe class="game-frame" id="game-frame" src="${gameFrame.src}" title="Ловец яблок версия ${version}"></iframe>`;
-                        // Привязываем события к новому iframe
-                        const newGameFrame = document.getElementById('game-frame');
-                        // Можно добавить обработчики для iframe здесь при необходимости
-                    }, 800);
+            // Добавляем анимацию при наведении на карточки
+            const gameCards = document.querySelectorAll('.game-card');
+            gameCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
                 });
             });
             
-            // Имитируем загрузку при первом открытии
-            const gameFrameContainer = document.querySelector('.game-frame-container');
+            // Добавляем подтверждение при клике на кнопку запуска
+            const launchButtons = document.querySelectorAll('.launch-btn');
+            launchButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const version = this.parentElement.querySelector('.version-name').textContent;
+                    console.log(`Запуск ${version} в новой вкладке...`);
+                    
+                    // Можно добавить дополнительную логику здесь
+                    // Например, отслеживание запусков игр
+                });
+            });
+            
+            // Проверка наличия файлов игр (имитация)
+            console.log("Проверка доступности игровых файлов...");
             setTimeout(() => {
-                gameFrameContainer.innerHTML = `<iframe class="game-frame" id="game-frame" src="Ловец%20яблок%200.5.html" title="Ловец яблок версия 0.5"></iframe>`;
+                console.log("Система готова к запуску игр!");
             }, 500);
         });
     </script>
