@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игры от k3 - Ловец яблок</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: #4cc9f0;
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+        
+        .author {
+            font-size: 1.3rem;
+            color: #a9a9a9;
+            margin-bottom: 15px;
+        }
+        
+        .author span {
+            color: #f72585;
+            font-weight: bold;
+        }
+        
+        .description {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #b8b8b8;
+        }
+        
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        @media (min-width: 992px) {
+            .content {
+                flex-direction: row;
+            }
+            
+            .games-list {
+                flex: 1;
+            }
+            
+            .game-viewer {
+                flex: 2;
+            }
+        }
+        
+        .games-list {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .games-list h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #4cc9f0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(76, 201, 240, 0.3);
+        }
+        
+        .game-item {
+            background: rgba(30, 30, 50, 0.7);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .game-item:hover {
+            background: rgba(40, 40, 70, 0.8);
+            border-color: rgba(76, 201, 240, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-item.active {
+            background: rgba(40, 40, 70, 0.9);
+            border-color: #4cc9f0;
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.2);
+        }
+        
+        .game-title {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: #f0f0f0;
+        }
+        
+        .game-author {
+            color: #a9a9a9;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .version-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .version-btn {
+            padding: 10px 20px;
+            background: rgba(76, 201, 240, 0.2);
+            border: 1px solid rgba(76, 201, 240, 0.5);
+            color: #4cc9f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .version-btn:hover {
+            background: rgba(76, 201, 240, 0.4);
+            transform: translateY(-3px);
+        }
+        
+        .version-btn.active {
+            background: rgba(76, 201, 240, 0.7);
+            color: white;
+            box-shadow: 0 0 15px rgba(76, 201, 240, 0.5);
+        }
+        
+        .game-viewer {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .selected-game-info h3 {
+            font-size: 1.8rem;
+            color: #4cc9f0;
+        }
+        
+        .selected-version {
+            font-size: 1.2rem;
+            color: #f72585;
+            background: rgba(247, 37, 133, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(247, 37, 133, 0.3);
+        }
+        
+        .game-frame-container {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .game-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #888;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            opacity: 0.5;
+        }
+        
+        .placeholder h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #aaa;
+        }
+        
+        .placeholder p {
+            max-width: 400px;
+            line-height: 1.6;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #4cc9f0;
+        }
+        
+        .instructions h4 {
+            color: #4cc9f0;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Коллекция игр</h1>
+            <div class="author">Автор: <span>k3</span></div>
+            <p class="description">Добро пожаловать в коллекцию игр от разработчика k3. Здесь вы найдете различные версии игр, которые можно запустить прямо в браузере. На данный момент доступна игра "Ловец яблок" в двух версиях.</p>
+        </header>
+        
+        <div class="content">
+            <div class="games-list">
+                <h2>Список игр</h2>
+                
+                <div class="game-item active" id="apple-catcher">
+                    <div class="game-title">Ловец яблок</div>
+                    <div class="game-author">Автор: k3</div>
+                    <p>Игра, в которой нужно ловить падающие яблоки. Постарайтесь набрать как можно больше очков, избегая пропусков.</p>
+                    
+                    <div class="instructions">
+                        <h4>Как играть:</h4>
+                        <ul>
+                            <li>Используйте мышь или стрелки на клавиатуре для перемещения корзины</li>
+                            <li>Ловите падающие яблоки</li>
+                            <li>Каждое пойманное яблоко приносит очки</li>
+                            <li>Старайтесь не пропускать яблоки</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="version-selector">
+                        <button class="version-btn active" data-version="0.5" data-game="apple-catcher">Версия 0.5</button>
+                        <button class="version-btn" data-version="0.3" data-game="apple-catcher">Версия 0.3</button>
+                    </div>
+                </div>
+                
+                <div class="instructions" style="margin-top: 30px;">
+                    <h4>Информация:</h4>
+                    <p>На данный момент это единственная игра в коллекции. В будущем здесь появятся другие игры от разработчика k3.</p>
+                </div>
+            </div>
+            
+            <div class="game-viewer">
+                <div class="viewer-header">
+                    <div class="selected-game-info">
+                        <h3 id="selected-game-title">Ловец яблок</h3>
+                        <div class="selected-version" id="selected-version">Версия 0.5</div>
+                    </div>
+                    <div class="launch-info">
+                        <div>Игра загружена и готова к запуску</div>
+                    </div>
+                </div>
+                
+                <div class="game-frame-container">
+                    <iframe class="game-frame" id="game-frame" src="Ловец%20яблок%200.5.html" title="Ловец яблок версия 0.5"></iframe>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Коллекция игр от разработчика k3 | Все игры предназначены для использования в браузере</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; color: #555;">Примечание: Игра "Ловец яблок" не создается на этой странице, а загружается из соответствующих HTML-файлов</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const versionButtons = document.querySelectorAll('.version-btn');
+            const gameFrame = document.getElementById('game-frame');
+            const selectedVersionElement = document.getElementById('selected-version');
+            
+            // Обработчик клика на кнопки версий
+            versionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const game = this.getAttribute('data-game');
+                    const version = this.getAttribute('data-version');
+                    
+                    // Обновляем активную кнопку
+                    versionButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Обновляем отображаемую версию
+                    selectedVersionElement.textContent = `Версия ${version}`;
+                    
+                    // Загружаем соответствующую версию игры
+                    if (game === 'apple-catcher') {
+                        if (version === '0.5') {
+                            gameFrame.src = 'Ловец%20яблок%200.5.html';
+                        } else if (version === '0.3') {
+                            gameFrame.src = 'Ловец%20яблок%200.3.html';
+                        }
+                    }
+                    
+                    // Показываем информацию о загрузке
+                    const gameFrameContainer = document.querySelector('.game-frame-container');
+                    gameFrameContainer.innerHTML = `
+                        <div class="placeholder">
+                            <div class="placeholder-icon">⌛</div>
+                            <h3>Загрузка игры...</h3>
+                            <p>Игра "Ловец яблок", версия ${version} загружается. Пожалуйста, подождите.</p>
+                        </div>
+                    `;
+                    
+                    // Через короткую задержку загружаем iframe с игрой
+                    setTimeout(() => {
+                        gameFrameContainer.innerHTML = `<iframe class="game-frame" id="game-frame" src="${gameFrame.src}" title="Ловец яблок версия ${version}"></iframe>`;
+                        // Привязываем события к новому iframe
+                        const newGameFrame = document.getElementById('game-frame');
+                        // Можно добавить обработчики для iframe здесь при необходимости
+                    }, 800);
+                });
+            });
+            
+            // Имитируем загрузку при первом открытии
+            const gameFrameContainer = document.querySelector('.game-frame-container');
+            setTimeout(() => {
+                gameFrameContainer.innerHTML = `<iframe class="game-frame" id="game-frame" src="Ловец%20яблок%200.5.html" title="Ловец яблок версия 0.5"></iframe>`;
+            }, 500);
+        });
+    </script>
+</body>
+</html>
